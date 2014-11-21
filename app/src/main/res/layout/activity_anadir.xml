@@ -24,4 +24,11 @@
         android:id="@+id/etAnio"
         android:hint="@string/et_anio" />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/m_anadir"
+        android:id="@+id/btAnadir"
+        android:onClick="AnadirBoton" />
+
 </LinearLayout>

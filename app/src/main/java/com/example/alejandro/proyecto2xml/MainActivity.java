@@ -3,7 +3,10 @@ package com.example.alejandro.proyecto2xml;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.Xml;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -15,40 +18,66 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlSerializer;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class MainActivity extends Activity{
-private ArrayList<Pelicula> peliculas;
-private ArrayList <Pelicula> datos= new ArrayList <Pelicula>();
-private AdaptadorArrayList ad;
+
+        private ArrayList<Pelicula> peliculas;
+        private ArrayList <Pelicula> datos= new ArrayList <Pelicula>();
+        private AdaptadorArrayList ad;
+        private final int ANADIR = 0;
 
 
         /****************************************************/
-    /*                                                  */
-    /*                  metodos on                      */
-    /*                                                  */
+        /*                                                  */
+        /*                  metodos on                      */
+        /*                                                  */
         /****************************************************/
+
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_main);
+            initComponents();
+        }
+
+        @Override
+        public boolean onCreateOptionsMenu(Menu menu) {
+            getMenuInflater().inflate(R.menu.menu_main, menu);
+            return true;
+        }
+
+
+        public boolean onOptionsItemSelected(MenuItem item) {
+
+            int id = item.getItemId();
+            if (id == R.id.action_anadir) {
+                anadir();
+            }else if (id == R.id.action_fecha) {
+                ordenarFecha();
+            }else if (id == R.id.action_genero) {
+                ordenarGenero();
+            }else if (id == R.id.action_nombre) {
+                ordernarNombre();
+            }
+            return super.onOptionsItemSelected(item);
+        }
+
 
 
         public boolean onContextItemSelected(MenuItem item) {
             int id=item.getItemId();
             AdapterView.AdapterContextMenuInfo info=(AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-
-
-            //1 indice
             int index=info.position;
-            //2 Objeto view + el patron viewHolder
-            Object o=info.targetView.getTag();
-
-
-
-            AdaptadorArrayList.ViewHolder vh;
-            vh=(AdaptadorArrayList.ViewHolder) o;
-            tostada(vh.tvTitulo.getText().toString());
-
             if (id == R.id.action_borrar) {
-            /*peliculas.remove(index);
-            ad.notifyDataSetChanged();*/
                 borrar(index);
 
             }else if(id==R.id.action_editar){
@@ -60,49 +89,97 @@ private AdaptadorArrayList ad;
         }
 
         @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_main);
-            initComponents();
-        }
-
-        //al hacer long click sobre item de listview
-        @Override
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
             super.onCreateContextMenu(menu, v, menuInfo);
             MenuInflater inflater=getMenuInflater();
             inflater.inflate(R.menu.contextual,menu);
         }
-
-        //tecla menu
         @Override
-        public boolean onCreateOptionsMenu(Menu menu) {
-            getMenuInflater().inflate(R.menu.menu_main, menu);
-            return true;
-        }
+        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
 
-        //opcion del menu
-        //si proceso el click: true y si no no el que lo devuelve es el super
+            if (resultCode == RESULT_OK && requestCode == ANADIR) {
+                String titulo,genero,fecha;
+                Bundle dsc = data.getExtras();
+                titulo = dsc.getString("titulo");
+                genero = dsc.getString("genero");
+                fecha = dsc.getString("fecha");
 
-        public boolean onOptionsItemSelected(MenuItem item) {
+                datos.add(new Pelicula(titulo,genero,Integer.parseInt(fecha)));
 
-            int id = item.getItemId();
-            if(id==R.id.action_anadir){
-                return anadir();
+
+                try{
+
+                    FileOutputStream fosxml = new FileOutputStream(new File(getExternalFilesDir(null),"peliculas.xml"));
+
+                    XmlSerializer docxml= Xml.newSerializer();
+
+                    docxml.setOutput(fosxml, "UTF-8");
+
+                    docxml.startDocument(null, Boolean.valueOf(true));
+
+                    docxml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+
+                    docxml.startTag(null, "peliculas");
+                    for(int r = 0; r<datos.size();r++){
+                        docxml.startTag(null, "pelicula");
+                        docxml.attribute(null, "titulo", datos.get(r).getTitulo());
+                        docxml.attribute(null, "genero", datos.get(r).getGenero());
+                        docxml.attribute(null, "fecha", datos.get(r).getAnio().toString());
+                        docxml.endTag(null, "pelicula");
+
+                    }
+                    docxml.endDocument();
+                    docxml.flush();
+                    fosxml.close();
+                }catch(Exception e){
+                    System.out.println("error escribir xml");
+                }
+                visualizarPeliculas();
+                ad.notifyDataSetChanged();
+                tostada(getString(R.string.mensaje_anadir));
+
+
             }
-            return super.onOptionsItemSelected(item);
         }
+
+
 
 
         /****************************************************/
-    /*                                                  */
-    /*               auxiliares                         */
-    /*                                                  */
+        /*                                                  */
+        /*              cambio orientacion                  */
+        /*                                                  */
+        /****************************************************/
+
+        @Override
+        protected void onSaveInstanceState(Bundle guardaEstado) {
+            super.onSaveInstanceState(guardaEstado);
+
+            guardaEstado.putSerializable("peliculas", datos);
+
+        }
+
+        @Override
+        protected void onRestoreInstanceState(Bundle recuperaEstado) {
+           super.onRestoreInstanceState(recuperaEstado);
+            datos = (ArrayList<Pelicula>)recuperaEstado.getSerializable("peliculas");
+            visualizarPeliculas();
+        }
+
+
+
+
+        /****************************************************/
+        /*                                                  */
+        /*               auxiliares                         */
+        /*                                                  */
         /****************************************************/
 
 
         private void initComponents(){
-            Pelicula peli= new Pelicula("Pulp Fiction","Acción",1994);
+            datos = new ArrayList<Pelicula>();
+            /*Pelicula peli= new Pelicula("Pulp Fiction","Acción",1994);
             Pelicula peli2= new Pelicula("Atrápame si puedes","Comedia",2002);
             Pelicula peli3= new Pelicula("El efecto mariposa","Ciencia Ficción",2004);
             Pelicula peli4= new Pelicula("El silencio de los corderos","Novela de suspense",1991);
@@ -117,23 +194,29 @@ private AdaptadorArrayList ad;
             peliculas=new ArrayList<Pelicula>();
             for (Pelicula s:datos){
                 peliculas.add(s);
-            }
-            ad=new AdaptadorArrayList(this,R.layout.lista_detalle,peliculas);
-            final ListView lv=(ListView)findViewById(R.id.lvLista);
-            lv.setAdapter(ad);
-            lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Object o=view.getTag();
-                    AdaptadorArrayList.ViewHolder vh;
-                    vh=(AdaptadorArrayList.ViewHolder)o;
-                    tostada(vh.tvTitulo.getText().toString());
-                    tostada(peliculas.get(i)+" "+lv.getItemAtPosition(i));
+            }*/
+
+            try{
+
+                XmlPullParser lectorxml= Xml.newPullParser();
+                lectorxml.setInput(new FileInputStream(new File(getExternalFilesDir(null),"peliculas.xml")),"utf-8");
+                int evento = lectorxml.getEventType();
+
+                while(evento!=XmlPullParser.END_DOCUMENT){
+                    if(evento==XmlPullParser.START_TAG){
+                        String etiqueta = lectorxml.getName();
+                        if(etiqueta.compareTo("pelicula")==0){
+                            datos.add(new Pelicula(lectorxml.getAttributeValue(null, "titulo").toString(),lectorxml.getAttributeValue(null, "genero").toString(),Integer.parseInt(lectorxml.getAttributeValue(null, "fecha").toString())));
+                        }
+                    }
+                    evento = lectorxml.next();
                 }
-            });
-            registerForContextMenu(lv);
 
+            }catch (Exception e) {
+                System.out.println("ERROR AL LEER");
+            }
 
+            visualizarPeliculas();
         }
 
         private void tostada(String s){
@@ -149,127 +232,189 @@ private AdaptadorArrayList ad;
             return true;
         }
 
-
-        /****************************************************/
-    /*                                                  */
-    /*               metodos click                      */
-    /*                                                  */
-        /****************************************************/
-
-        private boolean anadir(){
-
-            //Crea una ventana nueva donde podemos añadir nuevos elementos
-            AlertDialog.Builder alert= new AlertDialog.Builder(this);
-            alert.setTitle("Añadir Película");
-            LayoutInflater inflater= LayoutInflater.from(this);
-            final View vista = inflater.inflate(R.layout.anadir, null);
-            alert.setView(vista);
-            alert.setPositiveButton("Añadir",new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    EditText etTitulo,etAnio,etGenero;
-                    etTitulo = (EditText) vista.findViewById(R.id.etTitulo);
-                    etAnio = (EditText) vista.findViewById(R.id.etAnio);
-                    etGenero = (EditText) vista.findViewById(R.id.etGenero);
-                    if(isNumeric(etAnio.getText().toString())){
-                        Pelicula peli= new Pelicula();
-                        peli.setTitulo(etTitulo.getText().toString());
-                        peli.setAnio(Integer.parseInt(etAnio.getText().toString()));
-                        peli.setGenero(etGenero.getText().toString());
-                        peliculas.add(peli);
-                        ad.notifyDataSetChanged();
-                        tostada("Película añadida");
-                    }else{
-                        tostada("Revisa fecha");
-                    }
-                }
-            });
-            alert.setNegativeButton("Cancelar",null);
-            alert.show();
-            tostada("Película añadida");
-            return true;
+        public void visualizarPeliculas(){
+            ad = new AdaptadorArrayList(this, R.layout.lista_detalle, datos);
+            final ListView ls = (ListView)findViewById(R.id.lvLista);
+            ls.setAdapter(ad);
+            registerForContextMenu(ls);
         }
-        private boolean borrar(final int pos){
 
-            //Crea una ventana nueva donde podemos añadir nuevos elementos
-            AlertDialog.Builder alert= new AlertDialog.Builder(this);
-            alert.setTitle("¿Seguro que desea borrarlo?");
-            LayoutInflater inflater= LayoutInflater.from(this);
 
-            alert.setPositiveButton(android.R.string.ok,new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    peliculas.remove(pos);
-                    ad.notifyDataSetChanged();
-                    tostada("Película borrada");
+        /****************************************************/
+        /*                                                  */
+        /*               metodos click                      */
+        /*                                                  */
+        /****************************************************/
+
+        private void anadir(){
+
+            Intent i = new Intent(this,Anadir.class);
+            startActivityForResult(i, ANADIR);
+        }
+
+        private boolean borrar(int pos){
+            String titulo,genero;
+            Integer fecha;
+            titulo = datos.get(pos).getTitulo();
+            genero = datos.get(pos).getGenero();
+            fecha = datos.get(pos).getAnio();
+            Pelicula p = new Pelicula(titulo,genero,fecha);
+
+            for(int i=0;i<datos.size();i++){
+                if(datos.get(i).equals(p)){
+                    datos.remove(i);
+                    try{
+
+                        FileOutputStream fosxml = new FileOutputStream(new File(getExternalFilesDir(null),"peliculas.xml"));
+
+                        XmlSerializer docxml= Xml.newSerializer();
+
+                        docxml.setOutput(fosxml, "UTF-8");
+
+                        docxml.startDocument(null, Boolean.valueOf(true));
+
+                        docxml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+
+                        docxml.startTag(null, "peliculas");
+                        for(int r = 0; r<datos.size();r++){
+                            docxml.startTag(null, "pelicula");
+                            docxml.attribute(null, "titulo", datos.get(r).getTitulo());
+                            docxml.attribute(null, "genero", datos.get(r).getGenero());
+                            docxml.attribute(null, "fecha", datos.get(r).getAnio().toString());
+                            docxml.endTag(null, "pelicula");
+
+                        }
+                        docxml.endDocument();
+                        docxml.flush();
+                        fosxml.close();
+                    }catch(Exception e){
+                        System.out.println("error escribir xml");
+                    }
+
+                    Collections.sort(datos);
+                    break;
                 }
-            });
-            alert.setNegativeButton(android.R.string.no, null);
-            alert.show();
+            }
+            Collections.sort(datos);
+            tostada(getString(R.string.mensaje_eliminar));
+            visualizarPeliculas();
             return true;
         }
 
         private boolean editar(final int index) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
-            alert.setTitle("Editar");
+            final String titulo,genero;
+            final Integer fecha;
+            titulo = datos.get(index).getTitulo();
+            genero = datos.get(index).getGenero();
+            fecha = datos.get(index).getAnio();
+
+            final AlertDialog.Builder alert= new AlertDialog.Builder(this);
+            alert.setTitle(R.string.titulo_editar);
+
             LayoutInflater inflater = LayoutInflater.from(this);
             final View vista = inflater.inflate(R.layout.editar, null);
             alert.setView(vista);
-            final EditText etTitulo, etAnio, etGenero;
+
+            final EditText etTitulo,etGenero,etFecha;
             etTitulo = (EditText) vista.findViewById(R.id.etTitulo2);
-            etAnio = (EditText) vista.findViewById(R.id.etAnio2);
             etGenero = (EditText) vista.findViewById(R.id.etGenero2);
+            etFecha = (EditText) vista.findViewById(R.id.etAnio2);
 
-            etTitulo.setText(peliculas.get(index).getTitulo().toString());
-            etAnio.setText(peliculas.get(index).getAnio().toString());
-            etGenero.setText(peliculas.get(index).getGenero().toString());
-            alert.setPositiveButton("Modificar", new DialogInterface.OnClickListener() {
+            etTitulo.setText(titulo);
+            etGenero.setText(genero);
+            etFecha.setText(fecha);
+
+            alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                    if (isNumeric(etAnio.getText().toString())) {
-                        Pelicula peli = new Pelicula();
-                        peli.setTitulo(etTitulo.getText().toString());
-                        peli.setAnio(Integer.parseInt(etAnio.getText().toString()));
-                        peli.setGenero(etGenero.getText().toString());
-                        peliculas.set(index, peli);
-                        ad.notifyDataSetChanged();
-                        tostada("Película modificada");
+                    Pelicula pAntigua = new Pelicula(titulo, genero, fecha);
+                    Pelicula pNueva = new Pelicula(etTitulo.getText().toString(),etGenero.getText().toString(), Integer.parseInt(etFecha.getText().toString()));
+                    Collections.sort(datos);
 
-                    } else {
-                        tostada("Revisa fecha");
+                    for(int i=0;i<datos.size();i++){
+                        if(datos.get(i).equals(pAntigua)){
+                            datos.remove(i);
+                            datos.add(pNueva);
+
+                            try{
+
+                                FileOutputStream fosxml = new FileOutputStream(new File(getExternalFilesDir(null),"peliculas.xml"));
+
+                                XmlSerializer docxml= Xml.newSerializer();
+
+                                docxml.setOutput(fosxml, "UTF-8");
+
+                                docxml.startDocument(null, Boolean.valueOf(true));
+
+                                docxml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+
+                                docxml.startTag(null, "peliculas");
+                                for(int r = 0; r<datos.size();r++){
+                                    docxml.startTag(null, "pelicula");
+                                    docxml.attribute(null, "titulo", datos.get(r).getTitulo());
+                                    docxml.attribute(null, "genero", datos.get(r).getGenero());
+                                    docxml.attribute(null, "fecha", datos.get(r).getAnio().toString());
+                                    docxml.endTag(null, "pelicula");
+
+                                }
+                                docxml.endDocument();
+                                docxml.flush();
+                                fosxml.close();
+                            }catch(Exception e){
+                                System.out.println("error escribir xml");
+                            }
+                            Collections.sort(datos);
+                            break;
+                        }
                     }
+
+                    ad.notifyDataSetChanged();
+                    tostada(getString(R.string.mensaje_editar));
+                    visualizarPeliculas();
                 }
             });
-            alert.setNegativeButton(android.R.string.no, null);
+            alert.setNegativeButton(android.R.string.no ,null);
             alert.show();
-            return true;
 
+            return true;
         }
 
         private boolean settings(){
             return true;
         }
-        /**Cuando haces click en la imagen aparece el modificar que hemos declarado antes*/
-    /*public void edit(View v){
-        int elemento=-1;
-        //guardamos la posicion en ViewHolder de la imagen y se la pasamos a la variable elementoV2
-        //metodo 1
-        int elementoV2;
-        elementoV2=(Integer)v.getTag();
-        //metodo 2
-        ViewParent vp= v.getParent();
-        View vp2=(View)vp;
-        Object o=vp2.getTag();
-        elemento= ((AdaptadorArrayList.ViewHolder) o).posicion;
-        //
-        editar(elementoV2);
-    }*/
-        /****************************************************/
-    /*                                                  */
-    /*               menus                              */
-    /*                                                  */
-        /****************************************************/
 
-        /****************************************************/
-    /*                                                  */
-    /*               clases internas                    */
-    /*                                                  */
-        /****************************************************/
+         /****************************************************/
+        /*                                                  */
+        /*               metodos ordenar                    */
+        /*                                                  */
+         /****************************************************/
+
+        public void ordenarFecha(){
+            Collections.sort(datos, new Comparator<Pelicula>() {
+                @Override
+                public int compare(Pelicula p1, Pelicula p2) {
+                    return p1.getAnio().compareTo(p2.getAnio());
+                }
+            });
+            ad.notifyDataSetChanged();
+        }
+
+        public void ordenarGenero(){
+            Collections.sort(datos, new Comparator<Pelicula>() {
+                @Override
+                public int compare(Pelicula p1, Pelicula p2) {
+                    return p1.getGenero().compareTo(p2.getGenero());
+                }
+            });
+            ad.notifyDataSetChanged();
+        }
+        public void ordernarNombre(){
+            Collections.sort(datos, new Comparator<Pelicula>() {
+                @Override
+                public int compare(Pelicula p1, Pelicula p2) {
+                    return p1.getTitulo().compareTo(p2.getTitulo());
+                }
+            });
+            ad.notifyDataSetChanged();
+        }
+
 }

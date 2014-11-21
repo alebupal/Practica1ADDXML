@@ -14,6 +14,7 @@ import java.util.ArrayList;
  * Created by Alejandro on 10/10/2014.
  */
 public class AdaptadorArrayList extends ArrayAdapter<Pelicula> {
+
     private Context contexto;
     private ArrayList<Pelicula> lista;
     private int recurso;
@@ -21,7 +22,6 @@ public class AdaptadorArrayList extends ArrayAdapter<Pelicula> {
 
     public static class ViewHolder{
         public TextView tvTitulo,tvAnio,tvGenero;
-        public ImageView ivCaratula;
         public int posicion;
     }
 
@@ -50,7 +50,6 @@ public class AdaptadorArrayList extends ArrayAdapter<Pelicula> {
             vh.tvTitulo=(TextView)convertView.findViewById(R.id.tvTitulo);
             vh.tvGenero=(TextView)convertView.findViewById(R.id.tvGenero);
             vh.tvAnio=(TextView)convertView.findViewById(R.id.tvAnio);
-            vh.ivCaratula=(ImageView)convertView.findViewById(R.id.ivCaratula);
             convertView.setTag(vh);
 
         }else{
@@ -63,21 +62,6 @@ public class AdaptadorArrayList extends ArrayAdapter<Pelicula> {
         vh.tvGenero.setText(lista.get(position).getGenero());
 
         return convertView;
-    }
-    private void borrar(final int pos){
-        AlertDialog.Builder alert= new AlertDialog.Builder(contexto);
-        alert.setTitle("Borrar");
-        LayoutInflater inflater= LayoutInflater.from(contexto);
-        alert.setPositiveButton("Borrar",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        lista.remove(pos);
-                        notifyDataSetChanged();
-                    }
-                });
-        alert.setNegativeButton(android.R.string.no, null);
-        alert.show();
-
     }
 
 
