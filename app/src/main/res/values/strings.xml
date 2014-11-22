@@ -20,5 +20,6 @@
     <string name="mensaje_editar">Se ha editado correctamente.</string>
     <string name="mensaje_anadir">Se ha añadido correctamente.</string>
     <string name="titulo_editar">Editar película</string>
+    <string name="duplicado">Película duplicada</string>
 
 </resources>

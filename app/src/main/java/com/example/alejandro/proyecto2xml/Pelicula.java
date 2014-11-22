@@ -3,10 +3,12 @@ package com.example.alejandro.proyecto2xml;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.Serializable;
+
 /**
  * Created by Alejandro on 19/11/2014.
  */
-public class Pelicula implements Comparable<Pelicula>, Parcelable {
+public class Pelicula implements Comparable<Pelicula>,Parcelable {
     private String titulo;
     private String genero;
     private Integer anio;
@@ -20,7 +22,6 @@ public class Pelicula implements Comparable<Pelicula>, Parcelable {
 
     public Pelicula() {
     }
-
 
 
     public String getTitulo() {
@@ -50,11 +51,11 @@ public class Pelicula implements Comparable<Pelicula>, Parcelable {
 
     @Override
     public int compareTo(Pelicula pelicula) {
-        if(this.getGenero().compareTo(pelicula.getGenero())!=0)
+        if (this.getGenero().compareTo(pelicula.getGenero()) != 0)
             return this.getGenero().compareTo(pelicula.getGenero());
-        if(this.getAnio().compareTo(pelicula.getAnio())!=0)
+        if (this.getAnio().compareTo(pelicula.getAnio()) != 0)
             return this.getAnio().compareTo(pelicula.getAnio());
-        if(this.getTitulo().compareTo(pelicula.getTitulo())!=0)
+        if (this.getTitulo().compareTo(pelicula.getTitulo()) != 0)
             return this.getTitulo().compareTo(pelicula.getTitulo());
         return 0;
     }
@@ -84,16 +85,33 @@ public class Pelicula implements Comparable<Pelicula>, Parcelable {
         return result;
     }
 
-    @Override
+
+
+    // ==================== Parcelable ====================
     public int describeContents() {
         return 0;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(titulo);
-        dest.writeString(genero);
-        dest.writeString(anio.toString());
-
+    public void writeToParcel(Parcel parcel, int flags) {
+        parcel.writeString(this.titulo);
+        parcel.writeString(this.genero);
+        parcel.writeInt(this.anio);
     }
+
+    private Pelicula(Parcel in) {
+        this.titulo = in.readString();
+        this.genero = in.readString();
+        this.anio = in.readInt();
+    }
+
+    public static final Parcelable.Creator<Pelicula> CREATOR = new Parcelable.Creator<Pelicula>() {
+        public Pelicula createFromParcel(Parcel in) {
+            return new Pelicula(in);
+        }
+
+        public Pelicula[] newArray(int size) {
+            return new Pelicula[size];
+        }
+    };
+
 }
