@@ -18,34 +18,23 @@ public class Anadir extends Activity {
     private String titulo, fecha, genero;
     private EditText etTitulo, etGenero, etFecha;
     private ArrayList<Pelicula> datos;
-    private int indice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_anadir);
-
         Bundle b = getIntent().getExtras();
         datos = b.getParcelableArrayList("arraylist");
-
-        Log.v("d", datos.size()+"");
-
-
         etTitulo = (EditText)findViewById(R.id.etTitulo);
         etGenero = (EditText)findViewById(R.id.etGenero);
         etFecha = (EditText)findViewById(R.id.etAnio);
-
-
     }
 
 
     public void AnadirBoton(View v){
-
         titulo = etTitulo.getText().toString();
         genero = etGenero.getText().toString();
         fecha = etFecha.getText().toString();
-
-
         if(comprueba(etTitulo.getText().toString())==true){
             Intent result = new Intent();
             result.putExtra("titulo", titulo);
@@ -57,7 +46,6 @@ public class Anadir extends Activity {
         }else{
             tostada(getString(R.string.duplicado));
         }
-
     }
 
 
@@ -82,7 +70,6 @@ public class Anadir extends Activity {
         titulo = recuperaEstado.getString("titulo");
         genero = recuperaEstado.getString("genero");
         fecha = recuperaEstado.getString("fecha");
-
         //Seteamos el valor del EditText con el valor de nuestra cadena
         etTitulo.setText(titulo);
         etGenero.setText(genero);
@@ -91,7 +78,7 @@ public class Anadir extends Activity {
 
     public boolean comprueba(String titulo){
         for (int i=0;i<datos.size();i++){
-            if(datos.get(i).getTitulo().equals(titulo)==true){
+            if(datos.get(i).getTitulo().equalsIgnoreCase(titulo)==true){
                 return false;
             }
         }

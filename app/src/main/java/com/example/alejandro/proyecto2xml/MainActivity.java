@@ -37,32 +37,23 @@ public class MainActivity extends Activity {
 
 
     /****************************************************/
-        /*                                                  */
-        /*                  metodos on                      */
-        /*                                                  */
-
-    /**
-     * ************************************************
-     */
+    /*                                                  */
+    /*                  metodos on                      */
+    /*                                                  */
+    /****************************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initComponents();
-
-        Log.v("tiene", datos.get(0).getTitulo() + "");
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
-
-
     public boolean onOptionsItemSelected(MenuItem item) {
-
         int id = item.getItemId();
         if (id == R.id.action_anadir) {
             anadir();
@@ -75,97 +66,50 @@ public class MainActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-
     public boolean onContextItemSelected(MenuItem item) {
         int id = item.getItemId();
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         int index = info.position;
         if (id == R.id.action_borrar) {
             borrar(index);
-
         } else if (id == R.id.action_editar) {
             editar(index);
         }
         return super.onContextItemSelected(item);
-
-
     }
-
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.contextual, menu);
     }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (resultCode == RESULT_OK && requestCode == ANADIR) {
             String titulo, genero, fecha;
             Bundle dsc = data.getExtras();
             titulo = dsc.getString("titulo");
             genero = dsc.getString("genero");
             fecha = dsc.getString("fecha");
-
             datos.add(new Pelicula(titulo, genero, Integer.parseInt(fecha)));
-
-
-            try {
-
-                FileOutputStream fosxml = new FileOutputStream(new File(getExternalFilesDir(null), "peliculas.xml"));
-
-                XmlSerializer docxml = Xml.newSerializer();
-
-                docxml.setOutput(fosxml, "UTF-8");
-
-                docxml.startDocument(null, Boolean.valueOf(true));
-
-                docxml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-
-                docxml.startTag(null, "peliculas");
-                for (int r = 0; r < datos.size(); r++) {
-                    docxml.startTag(null, "pelicula");
-                    docxml.attribute(null, "titulo", datos.get(r).getTitulo());
-                    docxml.attribute(null, "genero", datos.get(r).getGenero());
-                    docxml.attribute(null, "fecha", datos.get(r).getAnio().toString());
-                    docxml.endTag(null, "pelicula");
-
-                }
-                docxml.endDocument();
-                docxml.flush();
-                fosxml.close();
-            } catch (Exception e) {
-                System.out.println("error escribir xml");
-            }
             visualizarPeliculas();
             ad.notifyDataSetChanged();
             tostada(getString(R.string.mensaje_anadir));
-
-
         }
     }
 
-
     /****************************************************/
-        /*                                                  */
-        /*              cambio orientacion                  */
-        /*                                                  */
-
-    /**
-     * ************************************************
-     */
+    /*                                                  */
+    /*              cambio orientacion                  */
+    /*                                                  */
+    /****************************************************/
 
     @Override
     protected void onSaveInstanceState(Bundle guardaEstado) {
         super.onSaveInstanceState(guardaEstado);
-
         guardaEstado.putSerializable("peliculas", datos);
-
     }
-
     @Override
     protected void onRestoreInstanceState(Bundle recuperaEstado) {
         super.onRestoreInstanceState(recuperaEstado);
@@ -173,88 +117,40 @@ public class MainActivity extends Activity {
         visualizarPeliculas();
     }
 
-
     /****************************************************/
-        /*                                                  */
-        /*               auxiliares                         */
-        /*                                                  */
-
-    /**
-     * ************************************************
-     */
-
+    /*                                                  */
+    /*               auxiliares                         */
+    /*                                                  */
+    /****************************************************/
 
     private void initComponents() {
         datos = new ArrayList<Pelicula>();
-            /*Pelicula peli= new Pelicula("Pulp Fiction","Acción",1994);
-            Pelicula peli2= new Pelicula("Atrápame si puedes","Comedia",2002);
-            Pelicula peli3= new Pelicula("El efecto mariposa","Ciencia Ficción",2004);
-            Pelicula peli4= new Pelicula("El silencio de los corderos","Novela de suspense",1991);
-            Pelicula peli5= new Pelicula("Valkiria","Novela de suspense",2008);
-            Pelicula peli6= new Pelicula("Un ciudadano ejemplar","Novela de suspense",2009);
-            Pelicula peli7= new Pelicula("Luces rojas","Novela de suspense",2012);
-            Pelicula peli8= new Pelicula("Malditos bastardos","Aventura",2009);
-            Pelicula peli9= new Pelicula("Infiltrados","Crimen",2006);
-            Pelicula peli10= new Pelicula("Acero puro","Acción",2011);
-
-            Pelicula datos[]={peli,peli2,peli3,peli4,peli5,peli6,peli7,peli8,peli9,peli10};
-            peliculas=new ArrayList<Pelicula>();
-            for (Pelicula s:datos){
-                peliculas.add(s);
-            }*/
-
-        try {
-
-            XmlPullParser lectorxml = Xml.newPullParser();
-            lectorxml.setInput(new FileInputStream(new File(getExternalFilesDir(null), "peliculas.xml")), "utf-8");
-            int evento = lectorxml.getEventType();
-
-            while (evento != XmlPullParser.END_DOCUMENT) {
-                if (evento == XmlPullParser.START_TAG) {
-                    String etiqueta = lectorxml.getName();
-                    if (etiqueta.compareTo("pelicula") == 0) {
-                        datos.add(new Pelicula(lectorxml.getAttributeValue(null, "titulo").toString(), lectorxml.getAttributeValue(null, "genero").toString(), Integer.parseInt(lectorxml.getAttributeValue(null, "fecha").toString())));
-                    }
-                }
-                evento = lectorxml.next();
-            }
-
-        } catch (Exception e) {
-            System.out.println("ERROR AL LEER");
-        }
-
+        leerXML();
         visualizarPeliculas();
     }
-
     private void tostada(String s) {
         Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
-
-    public static boolean isNumeric(String str) {
-        try {
-            double d = Double.parseDouble(str);
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
-    }
-
     public void visualizarPeliculas() {
         ad = new AdaptadorArrayList(this, R.layout.lista_detalle, datos);
         final ListView ls = (ListView) findViewById(R.id.lvLista);
         ls.setAdapter(ad);
         registerForContextMenu(ls);
     }
-
+    public boolean comprueba(String titulo) {
+        for (int i = 0; i < datos.size(); i++) {
+            if (datos.get(i).getTitulo().equalsIgnoreCase(titulo) == true) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /****************************************************/
-        /*                                                  */
-        /*               metodos click                      */
-        /*                                                  */
-
-    /**
-     * ************************************************
-     */
+    /*                                                  */
+    /*               metodos click                      */
+    /*                                                  */
+    /****************************************************/
 
     private void anadir() {
 
@@ -264,56 +160,15 @@ public class MainActivity extends Activity {
         i.putExtras(b);
         startActivityForResult(i, ANADIR);
     }
-
     private boolean borrar(int pos) {
-        String titulo, genero;
-        Integer fecha;
-        titulo = datos.get(pos).getTitulo();
-        genero = datos.get(pos).getGenero();
-        fecha = datos.get(pos).getAnio();
-        Pelicula p = new Pelicula(titulo, genero, fecha);
+        borrarXML(pos);
 
-        for (int i = 0; i < datos.size(); i++) {
-            if (datos.get(i).equals(p)) {
-                datos.remove(i);
-                try {
 
-                    FileOutputStream fosxml = new FileOutputStream(new File(getExternalFilesDir(null), "peliculas.xml"));
-
-                    XmlSerializer docxml = Xml.newSerializer();
-
-                    docxml.setOutput(fosxml, "UTF-8");
-
-                    docxml.startDocument(null, Boolean.valueOf(true));
-
-                    docxml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-
-                    docxml.startTag(null, "peliculas");
-                    for (int r = 0; r < datos.size(); r++) {
-                        docxml.startTag(null, "pelicula");
-                        docxml.attribute(null, "titulo", datos.get(r).getTitulo());
-                        docxml.attribute(null, "genero", datos.get(r).getGenero());
-                        docxml.attribute(null, "fecha", datos.get(r).getAnio().toString());
-                        docxml.endTag(null, "pelicula");
-
-                    }
-                    docxml.endDocument();
-                    docxml.flush();
-                    fosxml.close();
-                } catch (Exception e) {
-                    System.out.println("error escribir xml");
-                }
-
-                Collections.sort(datos);
-                break;
-            }
-        }
         Collections.sort(datos);
         tostada(getString(R.string.mensaje_eliminar));
         visualizarPeliculas();
         return true;
     }
-
     private boolean editar(final int index) {
         final String titulo, genero;
         final Integer fecha;
@@ -335,86 +190,46 @@ public class MainActivity extends Activity {
 
         etTitulo.setText(titulo);
         etGenero.setText(genero);
-        //etFecha.setText(fecha);
-        if(comprueba(datos.get(index).getTitulo())==true) {
+        etFecha.setText(fecha.toString());
+
         alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
 
             public void onClick(DialogInterface dialog, int whichButton) {
-
+            if(comprueba(etTitulo.getText().toString())==true) {
 
 
                 Pelicula pAntigua = new Pelicula(titulo, genero, fecha);
                 Pelicula pNueva = new Pelicula(etTitulo.getText().toString(), etGenero.getText().toString(), Integer.parseInt(etFecha.getText().toString()));
                 Collections.sort(datos);
-
-                for (int i = 0; i < datos.size(); i++) {
-                    if (datos.get(i).equals(pAntigua)) {
-                        datos.remove(i);
-                        datos.add(pNueva);
-
-                        try {
-
-                            FileOutputStream fosxml = new FileOutputStream(new File(getExternalFilesDir(null), "peliculas.xml"));
-
-                            XmlSerializer docxml = Xml.newSerializer();
-
-                            docxml.setOutput(fosxml, "UTF-8");
-
-                            docxml.startDocument(null, Boolean.valueOf(true));
-
-                            docxml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-
-                            docxml.startTag(null, "peliculas");
-                            for (int r = 0; r < datos.size(); r++) {
-                                docxml.startTag(null, "pelicula");
-                                docxml.attribute(null, "titulo", datos.get(r).getTitulo());
-                                docxml.attribute(null, "genero", datos.get(r).getGenero());
-                                docxml.attribute(null, "fecha", datos.get(r).getAnio().toString());
-                                docxml.endTag(null, "pelicula");
-
-                            }
-                            docxml.endDocument();
-                            docxml.flush();
-                            fosxml.close();
-                        } catch (Exception e) {
-                            System.out.println("error escribir xml");
-                        }
-                        Collections.sort(datos);
-                        break;
-                    }
-                }
-
+                editarXML(pNueva,pAntigua);
                 ad.notifyDataSetChanged();
                 tostada(getString(R.string.mensaje_editar));
                 visualizarPeliculas();
+            }else{
+                tostada(getString(R.string.duplicado));
+            }
+
+            }
 
 
-
-            }});
+            });
             alert.setNegativeButton(android.R.string.no, null);
-            alert.show();}
-        else{
-            tostada(getString(R.string.duplicado));
-        }
+            alert.show();
 
 
 
         return true;
     }
-
     private boolean settings() {
         return true;
     }
 
     /****************************************************/
-        /*                                                  */
-        /*               metodos ordenar                    */
-        /*                                                  */
-
-    /**
-     * ************************************************
-     */
+    /*                                                  */
+    /*               metodos ordenar                    */
+    /*                                                  */
+    /****************************************************/
 
     public void ordenarFecha() {
         Collections.sort(datos, new Comparator<Pelicula>() {
@@ -425,7 +240,6 @@ public class MainActivity extends Activity {
         });
         ad.notifyDataSetChanged();
     }
-
     public void ordenarGenero() {
         Collections.sort(datos, new Comparator<Pelicula>() {
             @Override
@@ -435,7 +249,6 @@ public class MainActivity extends Activity {
         });
         ad.notifyDataSetChanged();
     }
-
     public void ordernarNombre() {
         Collections.sort(datos, new Comparator<Pelicula>() {
             @Override
@@ -446,14 +259,76 @@ public class MainActivity extends Activity {
         ad.notifyDataSetChanged();
     }
 
+    /****************************************************/
+    /*                                                  */
+    /*               metodos xml                        */
+    /*                                                  */
+    /****************************************************/
 
-    public boolean comprueba(String titulo) {
+
+    public void leerXML(){
+        try {
+            XmlPullParser lectorxml = Xml.newPullParser();
+            lectorxml.setInput(new FileInputStream(new File(getExternalFilesDir(null), "peliculas.xml")), "utf-8");
+            int evento = lectorxml.getEventType();
+            while (evento != XmlPullParser.END_DOCUMENT) {
+                if (evento == XmlPullParser.START_TAG) {
+                    String etiqueta = lectorxml.getName();
+                    if (etiqueta.compareTo("pelicula") == 0) {
+                        datos.add(new Pelicula(lectorxml.getAttributeValue(null, "titulo").toString(), lectorxml.getAttributeValue(null, "genero").toString(), Integer.parseInt(lectorxml.getAttributeValue(null, "fecha").toString())));
+                    }
+                }
+                evento = lectorxml.next();
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR AL LEER");
+        }
+    }
+    public void crearXML(){
+        try {
+            FileOutputStream fosxml = new FileOutputStream(new File(getExternalFilesDir(null), "peliculas.xml"));
+            XmlSerializer docxml = Xml.newSerializer();
+            docxml.setOutput(fosxml, "UTF-8");
+            docxml.startDocument(null, Boolean.valueOf(true));
+            docxml.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+            docxml.startTag(null, "peliculas");
+            for (int r = 0; r < datos.size(); r++) {
+                docxml.startTag(null, "pelicula");
+                docxml.attribute(null, "titulo", datos.get(r).getTitulo());
+                docxml.attribute(null, "genero", datos.get(r).getGenero());
+                docxml.attribute(null, "fecha", datos.get(r).getAnio().toString());
+                docxml.endTag(null, "pelicula");
+            }
+            docxml.endDocument();
+            docxml.flush();
+            fosxml.close();
+        } catch (Exception e) {
+            System.out.println("error escribir xml");
+        }
+    }
+    public void editarXML(Pelicula pNueva, Pelicula pAntigua){
         for (int i = 0; i < datos.size(); i++) {
-            if (datos.get(i).getTitulo().equals(titulo) == true) {
-                return false;
+            if (datos.get(i).equals(pAntigua)) {
+                datos.remove(i);
+                datos.add(pNueva);
+                crearXML();
+                Collections.sort(datos);
             }
         }
-        return true;
     }
-
+    public void borrarXML(int pos){
+        String titulo, genero;
+        Integer fecha;
+        titulo = datos.get(pos).getTitulo();
+        genero = datos.get(pos).getGenero();
+        fecha = datos.get(pos).getAnio();
+        Pelicula p = new Pelicula(titulo, genero, fecha);
+        for (int i = 0; i < datos.size(); i++) {
+            if (datos.get(i).equals(p)) {
+                datos.remove(i);
+                crearXML();
+                Collections.sort(datos);
+            }
+        }
+    }
 }
