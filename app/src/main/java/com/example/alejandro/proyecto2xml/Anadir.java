@@ -31,19 +31,23 @@ public class Anadir extends Activity {
     }
 
 
-    public void AnadirBoton(View v){
+    public void AnadirBoton(View v) {
         titulo = etTitulo.getText().toString();
         genero = etGenero.getText().toString();
         fecha = etFecha.getText().toString();
-        if(comprueba(etTitulo.getText().toString())==true){
-            Intent result = new Intent();
-            result.putExtra("titulo", titulo);
-            result.putExtra("genero", genero);
-            result.putExtra("fecha", fecha);
-            setResult(Activity.RESULT_OK, result);
-            finish();
-            this.finish();
-        }else{
+        if (comprueba(etTitulo.getText().toString()) == true) {
+            if (etTitulo.getText().toString().equals("") == true || etFecha.getText().toString().equals("") == true || etGenero.getText().toString().equals("") == true) {
+                tostada(getString(R.string.vacio));
+            } else {
+                Intent result = new Intent();
+                result.putExtra("titulo", titulo);
+                result.putExtra("genero", genero);
+                result.putExtra("fecha", fecha);
+                setResult(Activity.RESULT_OK, result);
+                finish();
+                this.finish();
+            }
+        } else {
             tostada(getString(R.string.duplicado));
         }
     }

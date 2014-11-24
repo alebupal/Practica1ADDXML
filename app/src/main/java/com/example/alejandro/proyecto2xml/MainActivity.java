@@ -93,6 +93,7 @@ public class MainActivity extends Activity {
             genero = dsc.getString("genero");
             fecha = dsc.getString("fecha");
             datos.add(new Pelicula(titulo, genero, Integer.parseInt(fecha)));
+            crearXML();
             visualizarPeliculas();
             ad.notifyDataSetChanged();
             tostada(getString(R.string.mensaje_anadir));
@@ -160,15 +161,23 @@ public class MainActivity extends Activity {
         i.putExtras(b);
         startActivityForResult(i, ANADIR);
     }
-    private boolean borrar(int pos) {
-        borrarXML(pos);
+    private boolean borrar(final int pos) {
 
-
-        Collections.sort(datos);
-        tostada(getString(R.string.mensaje_eliminar));
-        visualizarPeliculas();
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(getString(R.string.tituloBorrar));
+        alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                borrarXML(pos);
+                Collections.sort(datos);
+                tostada(getString(R.string.mensaje_eliminar));
+                visualizarPeliculas();
+            }
+        });
+        alert.setNegativeButton(android.R.string.no, null);
+        alert.show();
         return true;
     }
+
     private boolean editar(final int index) {
         final String titulo, genero;
         final Integer fecha;
@@ -193,32 +202,26 @@ public class MainActivity extends Activity {
         etFecha.setText(fecha.toString());
 
         alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-
-
             public void onClick(DialogInterface dialog, int whichButton) {
-            if(comprueba(etTitulo.getText().toString())==true) {
-
-
-                Pelicula pAntigua = new Pelicula(titulo, genero, fecha);
-                Pelicula pNueva = new Pelicula(etTitulo.getText().toString(), etGenero.getText().toString(), Integer.parseInt(etFecha.getText().toString()));
-                Collections.sort(datos);
-                editarXML(pNueva,pAntigua);
-                ad.notifyDataSetChanged();
-                tostada(getString(R.string.mensaje_editar));
-                visualizarPeliculas();
-            }else{
-                tostada(getString(R.string.duplicado));
+                if (comprueba(etTitulo.getText().toString()) == true) {
+                    if (etTitulo.getText().toString().equals("") == true || etFecha.getText().toString().equals("") == true || etGenero.getText().toString().equals("") == true) {
+                        tostada(getString(R.string.vacio));
+                    }else {
+                        Pelicula pAntigua = new Pelicula(titulo, genero, fecha);
+                        Pelicula pNueva = new Pelicula(etTitulo.getText().toString(), etGenero.getText().toString(), Integer.parseInt(etFecha.getText().toString()));
+                        Collections.sort(datos);
+                        editarXML(pNueva, pAntigua);
+                        ad.notifyDataSetChanged();
+                        tostada(getString(R.string.mensaje_editar));
+                        visualizarPeliculas();
+                    }
+                } else {
+                    tostada(getString(R.string.duplicado));
+                }
             }
-
-            }
-
-
-            });
-            alert.setNegativeButton(android.R.string.no, null);
-            alert.show();
-
-
-
+        });
+        alert.setNegativeButton(android.R.string.no, null);
+        alert.show();
         return true;
     }
     private boolean settings() {

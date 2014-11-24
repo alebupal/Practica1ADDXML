@@ -21,5 +21,7 @@
     <string name="mensaje_anadir">Se ha añadido correctamente.</string>
     <string name="titulo_editar">Editar película</string>
     <string name="duplicado">Película duplicada</string>
+    <string name="vacio">Algun/os campos vacíos</string>
+    <string name="tituloBorrar">¿Seguro que desea borrarlo?</string>
 
 </resources>
