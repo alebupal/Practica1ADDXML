@@ -1,9 +1,7 @@
-package com.example.alejandro.proyecto2xml;
+package com.example.alejandro.Practica1AADXML;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import java.io.Serializable;
 
 /**
  * Created by Alejandro on 19/11/2014.

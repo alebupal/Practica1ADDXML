@@ -5,7 +5,7 @@ android {
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId "com.example.alejandro.proyecto2xml"
+        applicationId "com.example.alejandro.Practica1ADDXML"
         minSdkVersion 16
         targetSdkVersion 21
         versionCode 1

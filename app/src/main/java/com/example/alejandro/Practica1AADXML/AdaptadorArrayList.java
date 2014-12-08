@@ -1,17 +1,11 @@
-package com.example.alejandro.proyecto2xml;
-import android.app.AlertDialog;
+package com.example.alejandro.Practica1AADXML;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 /**
  * Created by Alejandro on 10/10/2014.

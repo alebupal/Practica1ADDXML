@@ -1,4 +1,4 @@
-package com.example.alejandro.proyecto2xml;
+package com.example.alejandro.Practica1AADXML;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
